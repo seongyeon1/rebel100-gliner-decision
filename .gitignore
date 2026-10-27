@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+results/
+sdk-constraints.txt
+build/
+*.egg-info/
+
+.env
+.env.*
+!.env.example
+*.log

@@ -1,0 +1,23 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cagent-decision-client"
+version = "0.1.0"
+description = "SDK-free HTTP client for the GLiNER decision service"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27,<1", "pydantic>=2,<3"]
+
+[tool.setuptools.packages.find]
+include = ["cagent_decision*"]

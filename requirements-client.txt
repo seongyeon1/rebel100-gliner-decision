@@ -1,0 +1,3 @@
+# cagent host only: no torch, GLiNER or vendor SDK.
+httpx>=0.27,<1
+pydantic>=2,<3
