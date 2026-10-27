@@ -2,7 +2,7 @@
 
 GLiNER2.5-multi-Decide의 분류 전용 포팅 실험, CPU/NPU 벤치마크, HTTP 서빙 API와 SDK 없는 cagent 클라이언트입니다.
 
-**실험 단계:** 작은 실제 DeBERTa/GLiNER 모델을 이용한 로컬 CPU·HTTP 통합 테스트 22개를 통과했습니다. 실제 287M 체크포인트의 Rebel100 컴파일·실행·가속은 아직 확인하지 않았습니다. 기존 리벨리온 SDK 환경이 필요합니다.
+**실험 단계:** 작은 실제 DeBERTa/GLiNER 모델을 이용한 로컬 CPU·HTTP 및 Docker 구성 테스트 28개를 통과했습니다. 실제 287M 체크포인트의 Rebel100 컴파일·실행·가속은 아직 확인하지 않았습니다. 기존 리벨리온 SDK 환경이 필요합니다.
 
 ```bash
 gh repo clone seongyeon1/rebel100-gliner-decision
@@ -11,6 +11,19 @@ SERVING_DEMO=1 bash run_all.sh
 ```
 
 서빙 API와 클라이언트 사용법은 [SERVING.md](SERVING.md)를 참고하세요. 서버 반입용 tar.gz와 cagent 클라이언트 wheel은 GitHub Releases에 제공합니다. 이 저장소에는 모델 가중치가 포함되어 있지 않으며, 최초 실행 시 설정된 Hugging Face snapshot을 내려받습니다.
+
+## Docker 실행
+
+```bash
+# Rebel100 호스트에서: SDK 이미지 자동 탐색 → 빌드 → 벤치마크 → HTTP/cagent 테스트
+bash docker_run.sh all
+
+# 상시 서빙과 별도 클라이언트 컨테이너 호출
+bash docker_run.sh serve
+bash docker_run.sh client
+```
+
+호스트 driver/CDI와 호환되는 SDK 이미지가 필요합니다. 이미지가 없다면 스크립트가 안내 후 중단합니다. [Docker 실행 안내](DOCKER.md)를 참고하세요.
 
 ---
 

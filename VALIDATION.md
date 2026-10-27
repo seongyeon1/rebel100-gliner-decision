@@ -16,3 +16,9 @@
 추가 검증: 작은 오프라인 체크포인트로 `run_all.sh`의 CPU 경로를 실제 subprocess 실행해 SDK constraints·환경 기록·벤치마크·최종 요약 생성을 확인했다. 이 테스트는 `SKIP_INSTALL=1`을 사용하며 서버의 SDK 설치나 pip 설치 성공을 대신 증명하지 않는다.
 
 서빙 추가 검증: 실제 uvicorn TCP 서버 시작·준비 대기·cagent 동기/비동기 HTTP 호출·자식 서버 자동 종료를 작은 오프라인 모델로 검증했다. 인증·422·503·429·허용 외 도구 라벨 응답 거부를 확인했다. `cagent-decision-client` wheel을 빌드하고 의존성이 httpx/pydantic뿐임을 확인했다. NPU 실측은 미수행이다.
+
+## Docker 추가 검증 (v0.2.0, 2026-10-28)
+
+추가 6개: SDK 이미지 선택(중복/모호성/없음), 기존 키 보존, 실제 Compose parser 구성, build context 제외 규칙. 전체 28개 테스트 통과.
+
+BuildKit Dockerfile 정적 검사와 Linux amd64 클라이언트 이미지 실제 빌드/실행을 수행했다. SDK base image가 없어 NPU 앱 이미지의 전체 빌드와 CDI/NPU 실행은 수행하지 않았다. 최신 검증 결과는 GitHub Release notes와 최종 테스트 출력 기준이다.

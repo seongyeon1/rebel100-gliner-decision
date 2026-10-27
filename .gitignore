@@ -10,3 +10,7 @@ build/
 .env.*
 !.env.example
 *.log
+
+/data/
+/models/
+/.cache/

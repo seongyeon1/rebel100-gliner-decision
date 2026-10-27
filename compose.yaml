@@ -1,0 +1,82 @@
+x-runtime: &runtime
+  platform: linux/amd64
+  image: ${DECISION_IMAGE:-rebel100-gliner-decision:local}
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      RBLN_BASE_IMAGE: ${RBLN_BASE_IMAGE:?Run bash docker_run.sh setup or set an SDK base image}
+      SDK_PYTHON: ${SDK_PYTHON:-python3}
+  init: true
+  shm_size: 2gb
+  devices:
+    - "${RBLN_CDI_DEVICE:-rebellions.ai/npu=0}"
+  environment: &runtime-env
+    BACKEND: ${BACKEND:-rbln-compile}
+    DTYPE: ${DTYPE:-float16}
+    BUCKET: ${BUCKET:-256}
+    NPU_DEVICE: ${NPU_DEVICE:-0}
+    CPU_THREADS: ${CPU_THREADS:-4}
+    MAX_PENDING: ${MAX_PENDING:-8}
+    DECISION_API_KEY: ${DECISION_API_KEY:?Run bash docker_run.sh setup to generate a key}
+    HOST: 0.0.0.0
+    PORT: "8009"
+    HF_HOME: /cache/huggingface
+    SERVE_CACHE_DIR: /app/results/serve-cache
+    SKIP_INSTALL: "1"
+  volumes:
+    - hf-cache:/cache/huggingface
+    - ./results:/app/results
+    - ./data:/data:ro
+  stop_grace_period: 45s
+
+services:
+  api:
+    <<: *runtime
+    command: [serve]
+    restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8009}:8009"
+    healthcheck:
+      test: [CMD, /bin/sh, /app/docker/healthcheck.sh]
+      interval: 10s
+      timeout: 3s
+      start_period: 1800s
+      retries: 3
+
+  benchmark:
+    <<: *runtime
+    profiles: [tools]
+    command: [benchmark]
+    environment:
+      <<: *runtime-env
+      WARMUP: ${WARMUP:-3}
+      REPEATS: ${REPEATS:-20}
+      DATASET: ${DATASET:-/app/examples.jsonl}
+      SERVING_DEMO: ${SERVING_DEMO:-1}
+
+  demo:
+    <<: *runtime
+    profiles: [tools]
+    command: [demo]
+
+  client:
+    platform: linux/amd64
+    profiles: [client]
+    image: ${DECISION_CLIENT_IMAGE:-rebel100-decision-client:local}
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    init: true
+    environment:
+      DECISION_API_URL: http://api:8009
+      DECISION_API_KEY: ${DECISION_API_KEY:?Run bash docker_run.sh setup}
+    volumes:
+      - ./results:/results
+    command: [--output, /results/client-responses.json]
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  hf-cache:
