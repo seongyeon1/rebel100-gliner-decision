@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive \
+    PATH=/opt/rbln/bin:$PATH \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 python3-venv ca-certificates git libgomp1 libnuma1 libatomic1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m venv /opt/rbln
+WORKDIR /opt/sdk-bootstrap
+COPY docker/bootstrap_install.py ./bootstrap_install.py
+# Optional authenticated pip configuration is visible for this RUN only.
+# Never COPY it or put registry credentials into ARG/ENV.
+RUN --mount=type=secret,id=sdk_pip_config,target=/run/secrets/sdk-pip.conf \
+    PIP_CONFIG_FILE=/run/secrets/sdk-pip.conf python3 bootstrap_install.py
+WORKDIR /app

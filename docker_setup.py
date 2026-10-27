@@ -98,16 +98,33 @@ def discover_images(python: str) -> Dict[str, str]:
     return compatible
 
 
+def resolve_image(existing: Dict[str, str], python: str) -> str:
+    """Reuse an SDK image or bootstrap one only when discovery finds none."""
+    image = os.environ.get("RBLN_BASE_IMAGE") or existing.get("RBLN_BASE_IMAGE")
+    if image:
+        return image
+    found = discover_images(python)
+    if found:
+        return choose_image(found)
+    if (os.getenv("AUTO_BUILD_SDK") or existing.get("AUTO_BUILD_SDK", "1")) != "1":
+        return choose_image({})
+    from sdk_bootstrap import build_sdk
+
+    image = build_sdk(ROOT, existing)
+    # The bootstrap image exposes its venv on PATH as python3.
+    os.environ["SDK_PYTHON"] = "python3"
+    return image
+
+
 def main() -> None:
     """Keep host Docker/CDI configuration untouched; only prepare project files."""
     subprocess.run(["docker", "info"], check=True, stdout=subprocess.DEVNULL)
     subprocess.run(["docker", "compose", "version"], check=True)
     path = ROOT / ".env"
     existing = read_env(path)
-    image = os.environ.get("RBLN_BASE_IMAGE") or existing.get("RBLN_BASE_IMAGE")
     python = os.environ.get("SDK_PYTHON") or existing.get("SDK_PYTHON") or "python3"
-    if not image:
-        image = choose_image(discover_images(python))
+    image = resolve_image(existing, python)
+    python = os.environ.get("SDK_PYTHON") or python
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/@:+-]*", image):
         raise ValueError("Invalid RBLN_BASE_IMAGE reference")
     if not path.exists():

@@ -22,3 +22,9 @@
 추가 6개: SDK 이미지 선택(중복/모호성/없음), 기존 키 보존, 실제 Compose parser 구성, build context 제외 규칙. 전체 28개 테스트 통과.
 
 BuildKit Dockerfile 정적 검사와 Linux amd64 클라이언트 이미지 실제 빌드/실행을 수행했다. SDK base image가 없어 NPU 앱 이미지의 전체 빌드와 CDI/NPU 실행은 수행하지 않았다. 최신 검증 결과는 GitHub Release notes와 최종 테스트 출력 기준이다.
+
+## SDK bootstrap 추가 검증 (v0.3.0, 2026-10-28)
+
+6개 테스트 추가: build context 내부 credential 파일 거부, 공식 SDK 조합 고정, 이미지 부재 시 bootstrap, 기존 이미지 재사용, 인증 인덱스 URL 보존, host 검사 실패 시 빌드 중단. 전체 34개 테스트 통과.
+
+Dockerfile.sdk는 BuildKit 정적 검사 대상이다. Portal SDK 다운로드 및 SDK 이미지 전체 빌드/실제 NPU 실행은 미수행이다.

@@ -2,7 +2,7 @@
 
 GLiNER2.5-multi-Decide의 분류 전용 포팅 실험, CPU/NPU 벤치마크, HTTP 서빙 API와 SDK 없는 cagent 클라이언트입니다.
 
-**실험 단계:** 작은 실제 DeBERTa/GLiNER 모델을 이용한 로컬 CPU·HTTP 및 Docker 구성 테스트 28개를 통과했습니다. 실제 287M 체크포인트의 Rebel100 컴파일·실행·가속은 아직 확인하지 않았습니다. 기존 리벨리온 SDK 환경이 필요합니다.
+**실험 단계:** 작은 실제 DeBERTa/GLiNER 모델을 이용한 로컬 CPU·HTTP 및 Docker 구성 테스트 34개를 통과했습니다. 실제 287M 체크포인트의 Rebel100 컴파일·실행·가속은 아직 확인하지 않았습니다. NPU 실행에는 호환되는 host driver/CDI와 SDK가 필요하며, SDK 이미지는 자동 빌드할 수 있습니다.
 
 ```bash
 gh repo clone seongyeon1/rebel100-gliner-decision
@@ -23,7 +23,7 @@ bash docker_run.sh serve
 bash docker_run.sh client
 ```
 
-호스트 driver/CDI와 호환되는 SDK 이미지가 필요합니다. 이미지가 없다면 스크립트가 안내 후 중단합니다. [Docker 실행 안내](DOCKER.md)를 참고하세요.
+호스트 driver/CDI가 필요합니다. SDK 이미지가 없으면 공식 패키지로 기반 이미지를 자동 빌드합니다. 보호된 SDK 다운로드에는 Portal 접근 설정이 필요합니다. [Docker 실행 안내](DOCKER.md)를 참고하세요.
 
 ---
 

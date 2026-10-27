@@ -3,11 +3,12 @@ set -euo pipefail
 cd "$(dirname "$0")"
 mode="${1:-all}"
 if [[ "$mode" == --help ]]; then
-  echo 'Usage: bash docker_run.sh [setup|check|build|all|demo|serve|client|logs|down]'
-  echo 'Auto-detects a local SDK image; otherwise set RBLN_BASE_IMAGE explicitly.'
+  echo 'Usage: bash docker_run.sh [sdk|setup|check|build|all|demo|serve|client|logs|down]'
+  echo 'Auto-detects an SDK image, or builds one from pinned SDK packages if missing.'
   exit 0
 fi
-case "$mode" in setup|check|build|all|demo|serve|client|logs|down) ;; *) echo 'Unknown mode' >&2; exit 2 ;; esac
+case "$mode" in sdk|setup|check|build|all|demo|serve|client|logs|down) ;; *) echo 'Unknown mode' >&2; exit 2 ;; esac
+if [[ "$mode" == sdk ]]; then exec python3 sdk_bootstrap.py; fi
 python3 docker_setup.py
 case "$mode" in
   setup) exit 0 ;;

@@ -17,3 +17,7 @@ wheels
 *.log
 *.tar.gz
 sdk-constraints.txt
+
+pip.conf
+*.pip.conf
+.netrc

@@ -1,6 +1,6 @@
 # Rebel100 Docker 실행
 
-기존 호스트 driver와 RBLN Container Toolkit(CDI), driver와 맞는 **SDK 이미지**를 사용합니다. Dockerfile은 애플리케이션 의존성을 추가하고 기존 `torch`, `torch-rbln`, `rebel-compiler` 버전을 고정합니다. host driver 설치나 Docker daemon 재시작은 스크립트가 수행하지 않습니다.
+기존 호스트 driver와 RBLN Container Toolkit(CDI)를 사용합니다. SDK 이미지는 기존 것을 재사용하거나, 없으면 공식 패키지를 설치해 로컬에서 만듭니다. Dockerfile은 애플리케이션 의존성을 추가하고 기존 `torch`, `torch-rbln`, `rebel-compiler` 버전을 고정합니다. host driver 설치나 Docker daemon 재시작은 스크립트가 수행하지 않습니다.
 
 ## 이미지 이름을 몰라도 시작
 
@@ -13,7 +13,7 @@ bash docker_run.sh all
 
 스크립트는 실행 중인 컨테이너의 이미지와 로컬 Rebellions/SDK 태그를 살펴보고, 임시 컨테이너에서 Python SDK 패키지 메타데이터를 확인합니다. 이 탐색에는 NPU를 사용하지 않습니다. SDK 이미지가 하나로 확정되면 `.env`에 기록하고, API 키를 생성합니다. 키는 화면에 출력하지 않습니다. 여러 태그가 같은 image ID이면 하나로 취급합니다. 서로 다른 SDK 이미지가 여러 개면 자동 선택하지 않고 후보를 보여줍니다.
 
-사용 가능한 이미지가 없다면 스크립트는 중단합니다. 서버가 bare-metal Python 환경만 사용 중이었다면 기존 Docker SDK 이미지가 없을 수 있습니다. 이 경우 Rebellions 담당자에게 host driver와 호환되는 SDK 이미지를 받아야 합니다. **일반 Python 이미지나 cagent HTTP 클라이언트 이미지를 SDK 이미지로 대신 사용할 수 없습니다.** 공식 SDK registry는 인증이 필요하다고 안내되어 있습니다. 저장소/Release 다운로드의 공개 여부와 SDK 이미지 접근 권한은 별개입니다. [공식 Release Notes](https://docs.rbln.ai/latest/supports/release_note.html)
+사용 가능한 이미지가 없으면 `Dockerfile.sdk`로 SDK 기반 이미지를 자동 빌드합니다. 서버가 bare-metal Python 환경만 사용 중이어도 이 경로를 사용할 수 있습니다. 먼저 CDI로 NPU 접근을 확인하고 Ubuntu 24.04/Python 3.12에 공식 SDK 조합을 설치합니다. **일반 Python 이미지나 cagent HTTP 클라이언트 이미지를 SDK 이미지로 대신 사용할 수 없습니다.** 공식 SDK registry는 인증이 필요하다고 안내되어 있습니다. 저장소/Release 다운로드의 공개 여부와 SDK 이미지 접근 권한은 별개입니다. [공식 Release Notes](https://docs.rbln.ai/latest/supports/release_note.html)
 
 이미지를 알고 있거나 여러 후보 중 선택하려면 실제 이미지명/태그를 지정합니다. 아래 대괄호 부분은 실제 값으로 바꿉니다.
 
@@ -35,7 +35,39 @@ docker ps --format 'table {{.Names}}\t{{.Image}}'
 docker image ls
 ```
 
-SDK 이미지 태그를 추측해서 기본값으로 넣지 않았습니다. Dockerfile의 `RBLN_BASE_IMAGE`는 필수 build argument입니다. SDK 이미지는 Python 3.11 이상, pip, `torch`, `torch-rbln`, `rebel-compiler`가 제공되어야 합니다. 의존성 충돌이 있으면 빌드를 실패시키고 SDK를 임의 교체하지 않습니다.
+SDK vendor 이미지 태그를 추측해서 기본값으로 넣지 않았습니다. Dockerfile의 `RBLN_BASE_IMAGE`는 필수 build argument입니다. SDK 이미지는 Python 3.11 이상, pip, `torch`, `torch-rbln`, `rebel-compiler`가 제공되어야 합니다. 의존성 충돌이 있으면 빌드를 실패시키고 SDK를 임의 교체하지 않습니다.
+
+## SDK 이미지가 없는 서버에서 한 번에 실행 (v0.3.0)
+
+```bash
+# 기존 SDK 이미지 재사용, 없으면 SDK 설치 → 앱 빌드 → 벤치마크 → HTTP/cagent 테스트
+bash docker_run.sh all
+
+# SDK 이미지만 명시적으로 새로 빌드하고 .env 설정
+bash docker_run.sh sdk
+```
+
+자동 빌드는 Ubuntu 24.04, Python 3.12, `rebel-compiler==0.12.0`, CPU `torch==2.13.0+cpu`, `torch-rbln==0.12.0` 조합을 사용합니다. SDK 0.12.0의 공식 설치 조합을 고정했으며 임의로 최신 버전끼리 섞지 않습니다. driver 호환성은 해당 서버에서 확인해야 합니다. [공식 설치 안내](https://docs.rbln.ai/v0.12.0/getting_started/installation_guide.html#rbln-pytorch-torch-rbln)
+
+**`rebel-compiler` 인덱스는 Portal 접근 권한이 필요할 수 있습니다.** 기존 pip 설정이 있으면 표준 사용자 설정 경로(`~/.config/pip/pip.conf`, `~/.pip/pip.conf`) 또는 `PIP_CONFIG_FILE`을 찾아 BuildKit secret으로 전달합니다. 인증 설정이 없으면 인증 없이 접근을 시도하되, 보호된 다운로드가 거부되면 중단합니다. 접근 권한을 우회하지 않습니다.
+
+담당자에게 받은 pip 설정 파일이 있다면 다음 한 줄로 지정합니다.
+
+```bash
+SDK_PIP_CONFIG="$HOME/.config/pip/pip.conf" bash docker_run.sh all
+```
+
+설정 파일에는 vendor 인덱스 접근 설정이 있어야 합니다. credentials를 포함한 index URL을 CLI의 익명 URL로 덮어쓰지 않도록 구성했습니다. 파일은 반드시 이 저장소 밖에 두어야 하며, 이미지 레이어나 Git에 복사하지 않습니다. Docker build에는 파일 경로만 `--secret`으로 전달됩니다. `.env`에 Portal 계정/토큰을 넣지 마세요.
+
+SDK 설치만 원하면:
+
+```bash
+SDK_PIP_CONFIG=/absolute/path/outside/project/pip.conf bash docker_run.sh sdk
+```
+
+기본 결과 이미지는 `rbln-gliner-sdk:0.12.0-py312`이며, 이후 실행에서 재사용됩니다. `AUTO_BUILD_SDK=0`을 설정하면 SDK 자동 빌드를 끌 수 있습니다. 다른 SDK 조합이 필요하면 기존 driver-compatible SDK 이미지를 `RBLN_BASE_IMAGE`로 지정합니다.
+
+SDK 설치는 컨테이너 내부에서만 수행합니다. 호스트 driver 설치, 커널 변경, Docker 재시작은 자동 수행하지 않습니다. host driver/CDI 검증이 실패하면 SDK 패키지를 받기 전에 중단하며, 담당자가 host 환경을 준비한 뒤 같은 명령을 다시 실행할 수 있습니다. SDK 다운로드/이미지 전체 빌드는 Portal 권한과 실제 서버 환경이 없어 이 개발 환경에서 수행하지 않았습니다.
 
 ## 호스트 준비 확인
 
@@ -149,7 +181,7 @@ bash docker_run.sh all
 
 ## 검증 범위
 
-- SDK 자동 선택/중복 태그/후보 모호성/기존 API 키 보존 테스트.
+- SDK 자동 선택/중복 태그/후보 모호성/기존 API 키 보존, 이미지가 없을 때의 bootstrap 분기, 인증 인덱스 보존, host 검사 실패 시 빌드 중단 테스트.
 - 실제 Docker Compose parser로 CDI 장치, profile, API port, SDK-free client 구성 확인.
 - SDK Dockerfile의 BuildKit 정적 검사. 필수 base image argument에는 일반 이미지 기본값을 주지 않도록 설계.
 - Linux amd64 HTTP 클라이언트 이미지의 실제 빌드/실행과 torch 미설치 확인.
