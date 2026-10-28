@@ -1,0 +1,17 @@
+# Use through atom_max.sh so every command selects this override.
+services:
+  api:
+    image: ${DECISION_IMAGE:-atom-max-gliner-decision:local}
+    volumes:
+      - ./results/atom-max:/app/results
+  benchmark:
+    image: ${DECISION_IMAGE:-atom-max-gliner-decision:local}
+    volumes:
+      - ./results/atom-max:/app/results
+  demo:
+    image: ${DECISION_IMAGE:-atom-max-gliner-decision:local}
+    volumes:
+      - ./results/atom-max:/app/results
+  client:
+    volumes:
+      - ./results/atom-max:/results

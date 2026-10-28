@@ -1,4 +1,6 @@
-# Rebel100 GLiNER Decision Service
+# GLiNER Decision Service — ATOM MAX / Rebel100
+
+**현재 배포 대상: ATOM MAX.** [ATOM MAX 실행 안내](ATOM_MAX.md)의 `bash atom_max.sh all`로 CPU 비교, NPU 벤치마크, HTTP/cagent 예제를 실행합니다. ATOM MAX용 결과와 컴파일 캐시는 Rebel100과 분리합니다. 실제 ATOM MAX 컴파일·추론·성능은 아직 검증하지 않았습니다. 아래 Rebel100 명령은 기존 실행 경로로 유지합니다.
 
 GLiNER2.5-multi-Decide의 분류 전용 포팅 실험, CPU/NPU 벤치마크, HTTP 서빙 API와 SDK 없는 cagent 클라이언트입니다.
 
